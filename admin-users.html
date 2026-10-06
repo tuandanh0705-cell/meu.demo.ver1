@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Quản lý Học viên - META ECOM UNI</title>
+<style>
+  :root {
+    --navy: #0b0726;
+    --brand: #ef4b28;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --gray-text: #64748b;
+    --border: #e2e8f0;
+    --sidebar-w: 260px;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--navy); display: flex; min-height: 100vh; overflow-x: hidden; }
+
+  /* SIDEBAR */
+  .admin-sidebar {
+    width: var(--sidebar-w);
+    background: var(--navy);
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sidebar-logo img { height: 32px; filter: brightness(0) invert(1); }
+  .sidebar-menu {
+    padding: 20px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #cbd5e1;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  .menu-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .menu-item:hover, .menu-item.active {
+    background: var(--brand);
+    color: #fff;
+  }
+
+  /* MAIN LAYOUT */
+  .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  
+  /* TOPBAR */
+  .admin-topbar {
+    height: 72px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; font-weight: 700; font-size: 1.2rem; }
+  .topbar-right { display: flex; align-items: center; gap: 24px; }
+  .icon-btn { position: relative; cursor: pointer; color: var(--gray-text); display: flex; align-items: center; justify-content: center; }
+  .icon-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .badge { position: absolute; top: -4px; right: -4px; background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 700; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #fff; }
+  .admin-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .admin-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .admin-profile-info div { font-weight: 600; font-size: 0.9rem; }
+  .admin-profile-info span { font-size: 0.75rem; color: var(--gray-text); }
+
+  /* CONTENT */
+  .admin-content { padding: 32px; flex: 1; }
+
+  /* TABLE SECTION */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-header h2 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .section-header h2 span { background: var(--brand); color: #fff; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; }
+  .btn-primary { background: var(--navy); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { background: #f8fafc; text-align: left; padding: 16px 24px; font-size: 0.85rem; font-weight: 600; color: var(--gray-text); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: 0.95rem; vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover { background: #f1f5f9; }
+
+  .user-cell { display: flex; align-items: center; gap: 12px; }
+  .user-cell-info { font-weight: 600; color: var(--navy); }
+  .user-cell-email { font-size: 0.8rem; color: var(--gray-text); font-weight: 400; }
+  
+  .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+  .status-active { background: #dcfce7; color: #166534; }
+
+  .action-btn { background: none; border: none; color: var(--gray-text); cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s; }
+  .action-btn:hover { color: var(--navy); background: #e2e8f0; }
+
+  @media (max-width: 768px) {
+    .admin-sidebar { display: none; }
+    .admin-content { padding: 20px; }
+  }
+</style>
+<link rel="stylesheet" href="meu-typography.css?v=20261006-roboto">
+</head>
+<body>
+
+<aside class="admin-sidebar">
+  <div class="sidebar-logo">
+    <img src="images/logo-meu-ngang.png" alt="META ECOM UNI">
+  </div>
+  <div class="sidebar-menu">
+    <a href="admin.html" class="menu-item">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      Tổng quan
+    </a>
+    <a href="admin-courses.html" class="menu-item">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      Quản lý khóa học
+    </a>
+    <a href="admin-users.html" class="menu-item active">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      Học viên
+    </a>
+    <a href="#" class="menu-item">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+      Đơn hàng
+    </a>
+    <a href="#" class="menu-item">
+      <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+      Báo cáo doanh thu
+    </a>
+    <a href="#" class="menu-item" style="margin-top: auto;">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      Cài đặt hệ thống
+    </a>
+  </div>
+</aside>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      Quản lý học viên
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <div class="badge">3</div>
+      </div>
+      <div class="admin-profile">
+        <img src="images/avatar-default.svg" alt="Ảnh đại diện mặc định">
+        <div class="admin-profile-info">
+          <div>Quản trị viên</div>
+          <span>Super Admin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Danh sách học viên <span id="userCountBadge">0</span></h2>
+        <div style="display:flex; gap:12px;">
+          <input type="text" placeholder="Tìm kiếm tên, email, sđt..." style="padding:8px 16px; border-radius:6px; border:1px solid var(--border); font-family:inherit; min-width:250px;">
+          <button class="btn-primary">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Thêm học viên
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Học viên</th>
+              <th>Số điện thoại</th>
+              <th>Ngày tham gia</th>
+              <th>Khóa học</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <!-- JS Render -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  function renderUsers() {
+    let allUsers = JSON.parse(localStorage.getItem('allUsers')) || [];
+    const currentUserData = JSON.parse(localStorage.getItem('userData'));
+    const purchased = JSON.parse(localStorage.getItem('purchasedCourses')) || [];
+    
+    // Nếu allUsers trống (do người dùng đăng ký TRƯỚC KHI mảng allUsers được thêm vào code)
+    // nhưng userData có tồn tại -> tự động cập nhật userData vào mảng allUsers
+    if (allUsers.length === 0 && currentUserData && currentUserData.name !== 'Khách') {
+      const userToPush = {
+        name: currentUserData.name,
+        email: currentUserData.email,
+        phone: currentUserData.phone || '0987654321',
+        joinDate: new Date().toLocaleDateString('vi-VN'),
+        courses: purchased.length // đếm số khóa đã mua
+      };
+      allUsers.push(userToPush);
+      localStorage.setItem('allUsers', JSON.stringify(allUsers));
+    }
+    
+    // Cập nhật lại số lượng khóa học nếu người dùng hiện tại mua thêm khóa
+    if (currentUserData && allUsers.length > 0) {
+      allUsers = allUsers.map(u => {
+        if (u.email === currentUserData.email) {
+          u.courses = purchased.length;
+        }
+        return u;
+      });
+      localStorage.setItem('allUsers', JSON.stringify(allUsers));
+    }
+
+    document.getElementById('userCountBadge').textContent = allUsers.length;
+    
+    const tbody = document.getElementById('userTableBody');
+    if (allUsers.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; padding: 40px; color: var(--gray-text);">Chưa có học viên nào trong hệ thống.</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    // Đảo ngược mảng để học viên mới hiện lên đầu
+    const reversedUsers = [...allUsers].reverse();
+    
+    tbody.innerHTML = reversedUsers.map(user => {
+      const nameParts = user.name.split(' ');
+      const initial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+      const colorArr = ['#ef4b28', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
+      const bg = colorArr[user.name.length % colorArr.length];
+      
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div style="width:36px; height:36px; border-radius:50%; background:${bg}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">${initial}</div>
+              <div>
+                <div class="user-cell-info">${user.name}</div>
+                <div class="user-cell-email">${user.email}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-weight:500;">${user.phone || 'N/A'}</td>
+          <td>${user.joinDate || new Date().toLocaleDateString('vi-VN')}</td>
+          <td style="font-weight:700; color:var(--brand);">${user.courses || 0}</td>
+          <td><span class="status-badge status-active">Đang hoạt động</span></td>
+          <td>
+            <div style="display:flex; gap:8px;">
+              <button class="action-btn" title="Chỉnh sửa"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+              <button class="action-btn" title="Khóa tài khoản" style="color:var(--gray-text);"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderUsers);
+</script>
+
+</body>
+</html>

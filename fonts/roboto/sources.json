@@ -1,0 +1,55 @@
+{
+  "family": "Roboto",
+  "sourceCss": "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap",
+  "licenseSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/OFL.txt",
+  "files": [
+    {
+      "file": "Roboto-italic-vietnamese.woff2",
+      "bytes": 15344,
+      "sha256": "3e6b22d2171656f2f886c209e04c70555a6bdb4903c011811726830492cd6ba9",
+      "source": "https://fonts.gstatic.com/s/roboto/v51/KFO5CnqEu92Fr1Mu53ZEC9_Vu3r1gIhOszmkCXkaWzU.woff2",
+      "style": "italic",
+      "subset": "vietnamese"
+    },
+    {
+      "file": "Roboto-italic-latin-ext.woff2",
+      "bytes": 31820,
+      "sha256": "7f21d061a9de1ea78a858938ff3b8e677869656b10bad470fc6039f8f3daf329",
+      "source": "https://fonts.gstatic.com/s/roboto/v51/KFO5CnqEu92Fr1Mu53ZEC9_Vu3r1gIhOszmkCHkaWzU.woff2",
+      "style": "italic",
+      "subset": "latin-ext"
+    },
+    {
+      "file": "Roboto-italic-latin.woff2",
+      "bytes": 47208,
+      "sha256": "14f23757c6b41b4b6c0b967ca3fa74ff47a868728158373461c4e6e4b6368f19",
+      "source": "https://fonts.gstatic.com/s/roboto/v51/KFO5CnqEu92Fr1Mu53ZEC9_Vu3r1gIhOszmkBnka.woff2",
+      "style": "italic",
+      "subset": "latin"
+    },
+    {
+      "file": "Roboto-normal-vietnamese.woff2",
+      "bytes": 14340,
+      "sha256": "0b60bbe04e9c479444b31270a72179f53e400beee57b7dd176c08e5e2e716831",
+      "source": "https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3OUBGEe.woff2",
+      "style": "normal",
+      "subset": "vietnamese"
+    },
+    {
+      "file": "Roboto-normal-latin-ext.woff2",
+      "bytes": 29392,
+      "sha256": "cedb374b05a35034cf96db185db4eeb8f8ce49e1a56197673702ff11b5533d6e",
+      "source": "https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3KUBGEe.woff2",
+      "style": "normal",
+      "subset": "latin-ext"
+    },
+    {
+      "file": "Roboto-normal-latin.woff2",
+      "bytes": 43136,
+      "sha256": "1404ca348bd75ef836f4dd8b6f2cc719458642d1237c368296b2fc652dca47dc",
+      "source": "https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2",
+      "style": "normal",
+      "subset": "latin"
+    }
+  ]
+}

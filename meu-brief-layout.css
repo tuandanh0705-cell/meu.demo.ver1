@@ -1,0 +1,60 @@
+/* Alignment follows the brief's content cells and explicit left/right layouts. */
+.brief-center{text-align:center}
+/* Keep mobile fields readable without iOS focus zoom, and give controls room to tap. */
+@media(max-width:700px){
+  body[data-page] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),body[data-page] select,body[data-page] textarea{font-size:16px}
+  body[data-page] .carousel-toolbar .icon-button,body[data-page] .category-buttons button,body[data-page] .course-card .btn,body[data-page] .filter-panel .btn{min-height:44px}
+  body[data-page] .carousel-toolbar .icon-button{min-width:44px}
+  body[data-page] .header-actions .icon-button,body[data-page] .menu-open.icon-button{width:44px;height:44px}
+}
+@media(max-width:359px){body[data-page] .header-actions .icon-button,body[data-page] .menu-open.icon-button{width:40px}}
+.brief-center p,.brief-center .lead{margin-inline:auto}
+.section-heading.brief-center{margin-inline:auto}
+#home-hero.hero{background:#fff;padding-block:90px 84px}
+.home-hero-copy{max-width:1050px;margin-inline:auto}
+#home-hero h1{font-size:clamp(2.3rem,4.5vw,4rem);line-height:1.2;margin-bottom:26px}
+.home-hero-copy .lead{max-width:950px;font-size:1.125rem;line-height:1.85}
+.home-hero-copy .home-primary{margin-top:32px}
+#home-paths .home-offer{justify-content:center}
+.leader-content{flex:1;min-width:0}
+.leader-portrait{width:240px;max-width:38%;height:280px}
+.contact-submit{text-align:center;margin-top:20px}
+.contact-submit .btn{min-width:200px}
+.webinar-intro-copy{max-width:1000px}
+.webinar-intro-copy .lead{max-width:840px}
+.webinar-intro-copy .event-meta{margin-block:30px;gap:32px}
+.webinar-intro-copy .event-meta dt{font-size:.8rem;color:#637389}
+.webinar-intro-copy .event-meta dd{margin:4px 0 0;font-weight:600;color:#17243a}
+.webinar-intro-copy .event-notice{margin-top:20px;font-size:.85rem;color:#637389}
+#event-recordings{grid-template-columns:repeat(2,minmax(0,1fr))}
+#learning-course-title{font-size:1.1rem;line-height:1.5;margin-bottom:16px}
+.lesson-sidebar-heading{font-size:.85rem;margin-block:24px 8px}
+.price-range-labels{display:flex;justify-content:space-between;gap:12px;font-size:.72rem}
+.price-range-labels label{min-width:0}
+.price-range-labels output{display:block;margin-left:0;font-size:.72rem}
+.price-dual-range{position:relative;height:36px;margin-top:8px;--range-min:0%;--range-max:100%}
+.price-range-track{position:absolute;top:15px;left:8px;right:8px;height:5px;background:#dce3ec;border-radius:8px;overflow:hidden}
+.price-range-fill{position:absolute;inset:0 calc(100% - var(--range-max)) 0 var(--range-min);background:#a65310}
+.filter-panel .price-dual-range input[type="range"]{position:absolute;inset:0;width:100%;height:36px;padding:0;margin:0;background:transparent;border:0;appearance:none;pointer-events:none}
+.price-dual-range input::-webkit-slider-runnable-track{height:5px;background:transparent}
+.price-dual-range input::-webkit-slider-thumb{appearance:none;width:18px;height:18px;margin-top:-6.5px;border:2px solid #fff;border-radius:50%;background:#a65310;box-shadow:0 0 0 1px #a65310;pointer-events:auto;cursor:grab}
+.price-dual-range input::-moz-range-track{height:5px;background:transparent}
+.price-dual-range input::-moz-range-thumb{width:16px;height:16px;border:2px solid #fff;border-radius:50%;background:#a65310;box-shadow:0 0 0 1px #a65310;pointer-events:auto;cursor:grab}
+.price-dual-range input:focus-visible{outline:0}
+.price-dual-range input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px #ffc579}
+.price-dual-range input:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px #ffc579}
+/* Catalog: three cards across desktop, one full-width card on phones. */
+#catalog-filter-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:44px;padding:8px 0;background:transparent;border:0;color:#17243a;font-size:.88rem;font-weight:600;text-align:left}
+#catalog-filter-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;transition:transform .15s}
+#catalog-filter-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+@media(max-width:700px){body[data-page="courses"] .filter-panel{padding:12px 18px}body[data-page="courses"] #catalog-filters:not([hidden]){margin-top:18px}}
+@media(prefers-reduced-motion:reduce){#catalog-filter-toggle svg{transition:none}}
+/* Wider content frames; the homepage hero keeps its centered reading width. */
+@media(min-width:1024px){body[data-page="courses"] .wrap,body[data-page="index"] .wrap{width:min(1920px,100%);padding-inline:clamp(28px,2.1vw,40px)}body[data-page="index"] #home-course-grid{grid-template-columns:repeat(3,minmax(0,1fr))}body[data-page="index"] .faq-list{max-width:none}}
+body[data-page="courses"] #catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+body[data-page="courses"] #catalog-grid .card-body{padding:18px}
+@media(min-width:1024px){body[data-page="courses"] .catalog-layout{grid-template-columns:230px minmax(0,1fr);gap:24px}}
+@media(min-width:701px) and (max-width:1023px){body[data-page="courses"] #catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){body[data-page="courses"] #catalog-grid{grid-template-columns:minmax(0,1fr);gap:24px}body[data-page="courses"] #catalog-grid .card-body{padding:22px}}
+@media(max-width:950px){#home-hero.hero{padding-block:70px}.home-hero-copy .lead{max-width:760px}.webinar-intro-copy .event-meta{gap:24px}#event-recordings{grid-template-columns:1fr}}
+@media(max-width:700px){#home-hero.hero{padding-block:52px 56px}.home-hero-copy .lead{font-size:1rem;line-height:1.8}#home-hero h1{font-size:clamp(2.05rem,8vw,2.8rem);letter-spacing:-.025em}.home-hero-copy .home-primary{margin-top:26px}.leader{flex-direction:column;align-items:stretch}.leader-portrait{width:100%;max-width:100%;height:260px}.contact-submit .btn{width:100%;min-width:0}.webinar-intro-copy .event-meta{flex-direction:column;gap:16px}.webinar-intro-copy .actions{align-items:stretch;flex-direction:column;max-width:350px}}
