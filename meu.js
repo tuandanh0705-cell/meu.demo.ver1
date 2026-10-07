@@ -6,7 +6,7 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const money = value => Number(value).toLocaleString('vi-VN') + 'đ';
+  const money = value => value == null ? 'Học phí đang cập nhật' : Number(value).toLocaleString('vi-VN') + 'đ';
   const params = new URLSearchParams(location.search);
   const page = document.body.dataset.page;
   const courseUrl = id => 'course-detail.html?id=' + encodeURIComponent(id);
@@ -27,7 +27,7 @@
   function updateBadge() { const count=readCart().length; $$('[data-cart-count]').forEach(el => { el.textContent = count; el.hidden=false; el.closest('a')?.setAttribute('aria-label',`Giỏ hàng, ${count} khóa học`); }); }
   function addCourse(id, buy = false) {
     const course = data.courses.find(c => c.id === id);
-    if (!course || course.status !== 'open') { toast('Khóa sắp mở: chọn Nhận thông báo để được tư vấn.'); return; }
+    if (!course || (course.status !== 'open' || course.price == null)) { toast('Khóa sắp mở: chọn Nhận thông báo để được tư vấn.'); return; }
     const items = readCart();
     if (!items.some(item => item.id === id)) items.push({ id, name: course.title, price: course.price, img: course.image });
     try { localStorage.setItem('cartItems', JSON.stringify(items)); }
@@ -37,7 +37,7 @@
     else toast('Đã thêm khóa học vào giỏ hàng.');
   }
   function courseCard(c) {
-    return `<article class="card course-card" data-course-id="${esc(c.id)}"><a class="card-image" href="${courseUrl(c.id)}"><img src="${esc(c.image)}" width="640" height="360" loading="lazy" alt="${esc(c.title)}"><span class="tag">${c.status === 'soon' ? 'Sắp mở' : 'Học Ngay'}</span></a><div class="card-body"><span class="tag">${esc(c.field)}</span><h3><a href="${courseUrl(c.id)}">${esc(c.title)}</a></h3><p class="course-summary">${esc(c.description)}</p><p class="teacher-name">Giảng viên: ${esc(c.teacher)}</p><div class="course-bottom"><span class="price">${c.price === 0 ? 'Miễn phí' : money(c.price)}</span><div class="actions"><a class="btn secondary" href="${courseUrl(c.id)}">Xem chi tiết</a>${c.status === 'open' ? `<button class="btn" type="button" data-add="${esc(c.id)}">Thêm giỏ hàng</button>` : `<a class="btn" href="contact.html?course=${encodeURIComponent(c.id)}&intent=notification">Nhận thông báo</a>`}</div></div></div></article>`;
+    return `<article class="card course-card" data-course-id="${esc(c.id)}"><a class="card-image" href="${courseUrl(c.id)}"><img src="${esc(c.image)}" width="640" height="360" loading="lazy" alt="${esc(c.title)}"><span class="tag">${c.status === 'pending' ? 'Lịch học đang cập nhật' : c.status === 'soon' ? 'Sắp mở' : 'Học Ngay'}</span></a><div class="card-body"><span class="tag">${esc(c.field)}</span><h3><a href="${courseUrl(c.id)}">${esc(c.title)}</a></h3><p class="course-summary">${esc(c.description)}</p><p class="teacher-name">${c.teacherConfirmed?'Giảng viên: '+esc(c.teacher):c.advisor?'Cố vấn: '+esc(c.advisor.name):'Giảng viên: '+esc(c.teacher)}</p><div class="course-bottom"><span class="course-price-group">${c.oldPrice?`<del class="course-price-original">${money(c.oldPrice)}</del>`:''}<span class="price">${c.price === 0 ? 'Miễn phí' : money(c.price)}</span></span><div class="actions"><a class="btn secondary" href="${courseUrl(c.id)}">Xem chi tiết</a>${c.status === 'open' && c.price != null ? `<button class="btn" type="button" data-add="${esc(c.id)}">Thêm giỏ hàng</button>` : `<a class="btn" href="contact.html?course=${encodeURIComponent(c.id)}&intent=notification">Nhận thông báo</a>`}</div></div></div></article>`;
   }
   const grids = $$('[data-course-grid]');
   function renderCourses(container, courses) { if (container) container.innerHTML = courses.map(courseCard).join(''); }
@@ -121,7 +121,7 @@
     }
     ['#price-min','#price-max'].forEach(s=>$(s).addEventListener('input',updatePrice));
     function statusMatch(course, values) {
-      return !values.length || values.some(v=>v==='Miễn phí' ? course.price===0 : v==='Sắp mở' ? course.status==='soon' : course.status==='open');
+      return !values.length || values.some(v=>v==='Miễn phí' ? course.price===0 : v==='Sắp mở' ? ['soon','pending'].includes(course.status) : course.status==='open');
     }
     $$('[data-filter-count]').forEach(el => {
       const [name,value]=el.dataset.filterCount.split(':');
@@ -131,9 +131,9 @@
       const query = normalize(search.value.trim());
       let list=data.courses.filter(c=>!query || normalize([c.title,c.description,c.teacher,...c.skills].join(' ')).includes(query));
       for (const name of ['field','goal','audience']) { const values=filters.getAll(name); if(values.length) list=list.filter(c=>values.includes(c[name])); }
-      list=list.filter(c=>statusMatch(c,filters.getAll('status')) && c.price>=Number(filters.get('min')||0) && c.price<=Number(filters.get('max')||10000000));
+      list=list.filter(c=>statusMatch(c,filters.getAll('status')) && (c.price==null ? Number(filters.get('min')||0)===0 && Number(filters.get('max')||10000000)===10000000 : c.price>=Number(filters.get('min')||0) && c.price<=Number(filters.get('max')||10000000)));
       if(sort.value==='free') list=list.filter(c=>c.price===0);
-      list.sort((a,b)=>sort.value==='price-asc'?a.price-b.price:sort.value==='price-desc'?b.price-a.price:sort.value==='popular'?b.popularity-a.popularity:sort.value==='newest'?Number(b.recent)-Number(a.recent):Number(b.featured)-Number(a.featured));
+      list.sort((a,b)=>sort.value==='price-asc'?(a.price??Infinity)-(b.price??Infinity):sort.value==='price-desc'?(b.price??-Infinity)-(a.price??-Infinity):sort.value==='popular'?b.popularity-a.popularity:sort.value==='newest'?Number(b.recent)-Number(a.recent):Number(b.featured)-Number(a.featured));
       const totalPages=Math.max(1,Math.ceil(list.length/pageSize)); currentPage=Math.min(currentPage,totalPages);
       renderCourses($('#catalog-grid'),list.slice((currentPage-1)*pageSize,currentPage*pageSize));
       $('#results-count').textContent=`Hiển thị ${list.length} khóa học`;
@@ -182,12 +182,36 @@
       $('#detail-duration').textContent=course.duration;$('#detail-level').textContent=course.level;$('#detail-field').textContent=course.field;
       $('#detail-audience').textContent='Đối tượng: '+course.audience;$('#detail-problem').textContent='Mục tiêu: '+course.goal;
       $('#detail-description').textContent=course.description;
-      $('#detail-curriculum').innerHTML=course.curriculum.length?'<p>Chương trình đang được cập nhật.</p>':`<div class="curriculum"><details open><summary>Module / Buổi học — Chờ đề cương</summary><div class="lesson-row"><span>Nội dung và tài liệu từng bài cần được bổ sung theo khóa.</span><a class="text-link" href="learning.html?id=${encodeURIComponent(course.id)}&mode=preview">Xem bố cục bài học thử</a></div></details></div>`;
+      $('#detail-curriculum').innerHTML=course.curriculum.length?`<p class="curriculum-summary">${course.curriculum.length} module · ${course.lessons} buổi học</p><div class="curriculum">${course.curriculum.map((m,i)=>`<details${i===0?' open':''}><summary>${esc(m.title)} <small>${m.lessons.length} buổi</small></summary>${m.lessons.map(l=>`<div class="lesson-row"><div><strong>${esc(l.title)}</strong><p>${esc(l.description)}</p></div><a class="text-link" href="learning.html?id=${encodeURIComponent(course.id)}&mode=preview&lessonId=${encodeURIComponent(l.id)}">Xem đề cương →</a></div>`).join('')}</details>`).join('')}</div>`:`<div class="curriculum"><details open><summary>Module / Buổi học — Chờ đề cương</summary><div class="lesson-row"><span>Nội dung và tài liệu từng bài cần được bổ sung theo khóa.</span><a class="text-link" href="learning.html?id=${encodeURIComponent(course.id)}&mode=preview">Xem bố cục bài học thử</a></div></details></div>`;
       $('#detail-actions').innerHTML=course.status==='soon'?`<a class="btn" href="contact.html?course=${course.id}&intent=notification">Nhận thông báo</a>`:`<button class="btn" type="button" data-buy="${course.id}">MUA NGAY</button><button class="btn secondary" type="button" data-add="${course.id}">Thêm vào giỏ hàng</button>`;
       $('#offer-actions').innerHTML=course.status==='soon'?`<a class="btn" href="contact.html?course=${course.id}&intent=notification">Nhận thông báo</a>`:`<button class="btn" type="button" data-buy="${course.id}">ĐĂNG KÍ KHÓA HỌC</button>`;
+      if(course.outlinePreview) renderOlympicDetail(course);
       renderCourses($('#related-course-grid'),data.courses.filter(c=>c.id!==course.id && c.field===course.field).concat(data.courses.filter(c=>c.id!==course.id && c.field!==course.field)).slice(0,3));
     }
   }
+
+  function renderOlympicDetail(course) {
+    document.body.classList.add('olympic-course');
+    const advisor=course.advisor;
+    $('.teacher-line span').textContent=advisor.role;
+    $('#detail-teacher').textContent=advisor.name;
+    $('.teacher-line a').href='instructor.html?id=pham-duc-cuong';$('.teacher-line a').textContent='Xem hồ sơ giảng viên';
+    $('.teacher-line .portrait-placeholder').textContent='PĐC';$('.teacher-line .portrait-placeholder').setAttribute('aria-label','Tên viết tắt của cố vấn; ảnh chân dung đang cập nhật');
+    $('.quick-info').innerHTML=['Nền tảng AI và Python','Machine Learning & Deep Learning','Luyện thi Olympic AI','Dự án thực tế và portfolio','Sử dụng LLM trong học tập'].map(v=>'<li>'+esc(v)+'</li>').join('');
+    $('#course-overview .pending').textContent='Hình thức và lịch học đang cập nhật.';
+    $('.enroll-card .muted').textContent='Lịch khai giảng đang cập nhật.';
+    $('#detail-preview span').textContent='▶ Xem demo';
+    $('#detail-actions').innerHTML=`<button class="btn" type="button" data-buy="${course.id}">MUA NGAY</button><button class="btn secondary" type="button" data-add="${course.id}">Thêm vào giỏ hàng</button>`;
+    $('#offer-actions').innerHTML=`<a class="btn" href="contact.html?course=${course.id}">Kết nối với MEU</a>`;
+    $('#course-offer h2').textContent='Tư vấn khóa học Olympic AI';$('#course-offer .pending').textContent='Học phí ưu đãi 4.290.000đ (giá gốc 6.990.000đ). Lịch khai giảng, hình thức học và chính sách đăng ký đang cập nhật.';
+    $('#detail-description').innerHTML=`<h2>Từ nền tảng AI đến dự án thực tế</h2><p>${esc(course.description)}</p><div class="olympic-route">${course.curriculum.map(m=>`<span><b>${esc(m.id)}</b>${esc(m.title.split(' — ')[1])}</span>`).join('')}</div>`;
+    $('#course-description .read-more').hidden=true;
+    $('#detail-outcomes').classList.remove('empty');$('#detail-outcomes').innerHTML='<ul class="olympic-outcomes">'+course.outcomes.map(v=>'<li>'+esc(v)+'</li>').join('')+'</ul>';
+    const profile=document.createElement('section');profile.id='course-advisor';profile.className='section course-instructor-summary';profile.innerHTML=`<div class="wrap"><div class="course-instructor-block"><h2>Hồ sơ giảng viên</h2><div class="course-instructor-row"><div class="course-instructor-avatar" role="img" aria-label="Tên viết tắt của Phạm Đức Cường; ảnh chân dung đang cập nhật">PĐC</div><div class="course-instructor-copy"><h3><a href="instructor.html?id=pham-duc-cuong">${esc(advisor.name)}</a></h3>${advisor.positions.map(v=>'<p>'+esc(v)+'</p>').join('')}<p class="course-instructor-role">${esc(advisor.role)}</p></div></div><details class="course-instructor-expand"><summary><span class="profile-expand-label">Xem hồ sơ</span><span class="profile-collapse-label">Thu gọn hồ sơ</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="course-instructor-excerpt"><p>${esc(advisor.bio)}</p><p><strong>Chuyên môn:</strong> ${advisor.expertise.map(esc).join(' · ')}.</p><a class="text-link" href="instructor.html?id=pham-duc-cuong">Xem hồ sơ đầy đủ →</a></div></details></div></div>`;
+    $('#course-outcomes').after(profile);
+    $('#course-faq .faq-list').innerHTML=[['Khóa học dành cho ai?',course.description],['Chương trình có bao nhiêu buổi?','8 module, 38 buổi. Nội dung đi từ nền tảng AI, Python, Machine Learning và PyTorch đến Computer Vision, NLP, luyện thi và dự án portfolio.'],['Có hoạt động kiểm tra và thi thử không?','Đề cương có kiểm tra đầu vào 90 phút tại M0 và thi thử 6 giờ mô phỏng Individual Contest tại M5.'],['ThS. Phạm Đức Cường đảm nhận vai trò gì?','ThS. Phạm Đức Cường trực tiếp giảng dạy và đồng hành với vai trò cố vấn chuyên môn.'],['Học phí, lịch học và yêu cầu đầu vào như thế nào?','Học phí ưu đãi 4.290.000đ, giá gốc 6.990.000đ. Lịch học và yêu cầu đầu vào đang cập nhật. Bạn có thể liên hệ MEU để được tư vấn.'],['Bản demo có video bài học chưa?','Bạn có thể xem đề cương đủ 38 buổi. Video, tài liệu và thông tin chứng nhận đang chờ bổ sung.']].map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');
+  }
+
   $$('[data-demo-form]').forEach(form=>form.addEventListener('submit',event=>{
     event.preventDefault();
     if(!form.reportValidity())return;
@@ -229,9 +253,27 @@
     const post=data.posts.find(p=>p.id===params.get('id'));
     $('#post-detail').innerHTML=post?`<div class="article-layout"><span class="tag">${esc(post.category)}</span><h1>${esc(post.title)}</h1><img src="${esc(post.image)}" width="900" height="506" alt="Minh họa bài viết"><p class="pending">Source demo mới có tiêu đề bài. Nội dung chi tiết, tác giả và ngày cập nhật chờ bổ sung; không tự viết nội dung nghiên cứu thay cho bài của MEU.</p><div class="actions"><a class="btn" href="courses.html">Khám phá khóa học liên quan</a><a class="btn secondary" href="ebook.html">Xem tài liệu</a></div></div>`:'<h1>Chưa có nội dung bài viết</h1><a class="btn" href="blog.html">Quay về Blog học tập</a>';
   }
+
+  function renderInstructorProfile(profile) {
+    document.body.classList.add('instructor-profile-page');
+    document.title=profile.name+' — Hồ sơ giảng viên — META ECOM UNI';
+    const profileIcon={profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',courses:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/>',posts:'<path d="M4 4h7a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H4Zm16 0h-3a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h3Z"/>'};
+    const tabs=[['profile','Hồ sơ'],['courses','Khóa học'],['posts','Blog kiến thức']];
+    $('#instructor-detail').innerHTML=`<div class="instructor-layout"><aside class="instructor-sidebar"><div class="instructor-identity"><div class="instructor-avatar" role="img" aria-label="Tên viết tắt của Phạm Đức Cường; ảnh chân dung đang cập nhật">PĐC</div><h1>${esc(profile.name)}</h1><p class="instructor-role">${esc(profile.role)}</p><p>${esc(profile.positions[0])}</p><p>${esc(profile.positions[1])}</p></div><div class="instructor-menu" role="tablist" aria-label="Hồ sơ giảng viên" aria-orientation="vertical">${tabs.map(([id,label],i)=>`<button type="button" role="tab" id="instructor-tab-${id}" aria-controls="instructor-panel-${id}" aria-selected="${i===0}" tabindex="${i===0?0:-1}" data-instructor-tab="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${profileIcon[id]}</svg>${label}</button>`).join('')}</div></aside><div class="instructor-main"><div class="instructor-banner"><span>META ECOM UNI / ĐỘI NGŨ GIẢNG VIÊN</span><strong>${esc(profile.name)}</strong><p>Trí tuệ nhân tạo · Nghiên cứu · Ứng dụng thực tế</p></div><section id="instructor-panel-profile" class="instructor-panel" role="tabpanel" aria-labelledby="instructor-tab-profile"><h2>Hồ sơ giảng viên</h2><p>${esc(profile.bio)}</p><h3>Vai trò hiện tại</h3><ul>${profile.positions.map(v=>'<li>'+esc(v)+'</li>').join('')}</ul><h3>Dấu ấn chuyên môn</h3><ul>${profile.highlights.map(v=>'<li>'+esc(v)+'</li>').join('')}</ul><h3>Lĩnh vực chuyên môn</h3><div class="pills">${profile.expertise.map(v=>'<span>'+esc(v)+'</span>').join('')}</div><h3>Chương trình giảng dạy</h3><p>Thầy trực tiếp giảng dạy và đồng hành với vai trò cố vấn chuyên môn trong chương trình Đào tạo Olympic AI của META ECOM UNI.</p><button type="button" class="btn secondary" data-show-instructor-courses>Xem khóa học của giảng viên →</button></section><section id="instructor-panel-courses" class="instructor-panel" role="tabpanel" aria-labelledby="instructor-tab-courses" hidden><h2>Khóa học của giảng viên</h2><div id="instructor-course-grid" class="course-grid"></div></section><section id="instructor-panel-posts" class="instructor-panel" role="tabpanel" aria-labelledby="instructor-tab-posts" hidden><h2>Blog kiến thức</h2><div class="instructor-empty"><h3>Bài viết đang được cập nhật</h3><p>Các bài viết của thầy Phạm Đức Cường sẽ được bổ sung tại đây.</p><a class="text-link" href="blog.html">Khám phá thư viện MEU →</a></div></section></div></div>`;
+    renderCourses($('#instructor-course-grid'),data.courses.filter(c=>profile.courseIds.includes(c.id)));
+    const tabButtons=$$('[data-instructor-tab]');
+    function activate(button){tabButtons.forEach(b=>{const active=b===button;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;$('#instructor-panel-'+b.dataset.instructorTab).hidden=!active;});}
+    tabButtons.forEach((button,index)=>{button.addEventListener('click',()=>activate(button));button.addEventListener('keydown',event=>{let next;if(['ArrowDown','ArrowRight'].includes(event.key))next=tabButtons[(index+1)%tabButtons.length];if(['ArrowUp','ArrowLeft'].includes(event.key))next=tabButtons[(index+tabButtons.length-1)%tabButtons.length];if(event.key==='Home')next=tabButtons[0];if(event.key==='End')next=tabButtons.at(-1);if(next){event.preventDefault();activate(next);next.focus();}});});
+    $('[data-show-instructor-courses]').addEventListener('click',()=>{activate(tabButtons[1]);tabButtons[1].focus();});
+  }
+
   if(page==='instructor') {
+    const detailedProfile=data.instructors?.find(t=>t.id===params.get('id'));
+    if(detailedProfile) renderInstructorProfile(detailedProfile);
+    else {
     const teacher=data.teachers.find(t=>t.id===params.get('id'));
     $('#instructor-detail').innerHTML=teacher?`<div class="profile-layout"><img src="${esc(teacher.image)}" width="400" height="420" alt="${esc(teacher.name)}"><div><span class="eyebrow">Hồ sơ giảng viên</span><h1>${esc(teacher.name)}</h1><p>${esc(teacher.role)}</p><p class="pending">Mô tả kinh nghiệm, chuyên môn và chương trình giảng dạy chờ xác nhận từ MEU.</p><a class="btn" href="contact.html">Liên hệ MEU</a></div></div>`:'<h1>Hồ sơ giảng viên đang cập nhật</h1><p>Giảng viên phụ trách cần được xác nhận theo từng khóa học.</p><a class="btn" href="contact.html">Liên hệ MEU</a>';
+  }
   }
   if(page==='pathway') {
     const path=data.paths.find(p=>p.id===params.get('id'));
@@ -264,7 +306,7 @@
     function save(){try{localStorage.setItem(key,JSON.stringify(saved));}catch{toast('Không lưu được tiến độ demo trên thiết bị này.');}}
     const lessonIcon=shape=>`<svg class="learning-icon" viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`;
     const stateIcons={play:lessonIcon('<path d="m9 6 10 6-10 6Z"/>'),check:lessonIcon('<path d="m5 12 4 4L19 6"/>'),lock:lessonIcon('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>')};
-    function completion(){const done=saved.done.includes(current.id),button=$('#complete-lesson');button.querySelector('span').textContent=done?'Đã hoàn thành':'Đánh dấu hoàn thành';button.setAttribute('aria-pressed',String(done));}
+    function completion(){const done=saved.done.includes(current.id),button=$('#complete-lesson');button.querySelector('span').textContent=course.outlinePreview?(done?'Đã xem đề cương':'Đánh dấu đã xem'):(done?'Đã hoàn thành':'Đánh dấu hoàn thành');button.setAttribute('aria-pressed',String(done));}
     function list(){
       const query=normalize($('#lesson-search').value);
       $('#lesson-modules').innerHTML=modules.map((m,mi)=>{
@@ -273,7 +315,7 @@
       }).join('');
       $('#lesson-search-empty').hidden=!!$('#lesson-modules').children.length;
       const percent=Math.round(saved.done.length/lessons.length*100);
-      $('#learning-progress-text').textContent=`Tiến độ demo: ${saved.done.length}/${lessons.length} bài`;
+      $('#learning-progress-text').textContent=`${course.outlinePreview?'Đã xem đề cương':'Tiến độ demo'}: ${saved.done.length}/${lessons.length} ${course.outlinePreview?'buổi':'bài'}`;
       $('#learning-progress-percent').textContent=percent+'%';$('#learning-progress').value=percent;
     }
     function play(lesson){
@@ -282,6 +324,15 @@
       $('#lesson-description').textContent=lesson.description||'Nội dung mô tả bài học đang chờ bổ sung theo khóa.';$('#lesson-note').value=saved.notes[lesson.id]||'';
       video.pause();video.removeAttribute('src');const hasVideo=!!(lesson.videoUrl&&/^https:\/\//.test(lesson.videoUrl));video.hidden=!hasVideo;$('#video-placeholder').hidden=hasVideo;
       $('#learning-video-status').textContent=hasVideo?'Chất lượng và phụ đề tùy theo video bài học':'Chưa có video cho bài học này';if(hasVideo)video.src=lesson.videoUrl;video.load();list();
+      if(course.outlinePreview){
+        const lessonUrl=new URL(location.href);lessonUrl.searchParams.set('lessonId',lesson.id);try{history.replaceState(null,'',lessonUrl);}catch{}
+        document.body.classList.add('olympic-outline');
+        $('.learning-preview-tag').textContent='Xem đề cương · Demo';$('.learning-header-current .learning-caption').textContent='Đang xem đề cương';
+        $('.learning-sidebar-label .learning-caption').textContent='Chương trình khóa học';
+        $('#video-placeholder').innerHTML=`<div class="outline-session"><span class="eyebrow">${esc(modules[lesson.moduleIndex].title)}</span><h2>Nội dung buổi ${lesson.session}</h2><ul>${lesson.description.split(';').map(v=>'<li>'+esc(v.trim())+'</li>').join('')}</ul><p class="outline-notice">Đề cương buổi học · Video và tài liệu đang được cập nhật.</p></div>`;
+        $('#learning-video-status').textContent='Đề cương do MEU cung cấp';
+        $('.learning-demo-notice').textContent='Bản demo hiển thị đề cương 38 buổi. Trạng thái đã xem và ghi chú chỉ lưu trên thiết bị này.';
+      }
       const index=lessons.findIndex(l=>l.id===lesson.id);$('#previous-lesson').disabled=!lessons.slice(0,index).some(l=>l.isPreview);$('#next-lesson').disabled=!lessons.slice(index+1).some(l=>l.isPreview);completion();
     }
     if(!current){$('#main').innerHTML='<div class="wrap section"><h1>Khóa chưa có bài học thử</h1><a class="btn" href="trial.html">Quay về Học thử</a></div>';return;}
